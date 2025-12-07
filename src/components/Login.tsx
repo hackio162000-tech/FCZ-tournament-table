@@ -82,7 +82,7 @@ export default function LoginPage() {
             />
             {!isRegistering && (
               <p className="text-xs text-cyberpunk-tertiary mt-1 opacity-75">
-                Demo: use "Nithi"
+                Demo: use &quot;Nithi&quot;
               </p>
             )}
           </div>

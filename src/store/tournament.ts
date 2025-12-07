@@ -37,9 +37,10 @@ interface TournamentStore {
   removeTeam: (teamId: string) => void;
   updateTeamScore: (
     teamId: string,
+    rounds?: number,
     wins?: number,
     losses?: number,
-    customScore?: number
+    points?: number
   ) => void;
   generateShareCode: () => string;
   generateAuthKey: (username: string) => string | null;

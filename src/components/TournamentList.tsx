@@ -1,7 +1,7 @@
 "use client";
 
 import { useTournamentStore } from "@/store/tournament";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function TournamentList() {
   const { tournaments, loadTournament, deleteTournament, createTournament } =
