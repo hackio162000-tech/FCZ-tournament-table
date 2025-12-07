@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto';
+  background: linear-gradient(135deg, #0a0e27 0%, #16213e 100%);
+  background-attachment: fixed;
+}
+
+/* Neon text effect */
+.neon-text {
+  color: #00ff88;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.8), 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+.neon-text-primary {
+  color: #ff006e;
+  text-shadow: 0 0 10px rgba(255, 0, 110, 0.8);
+}
+
+.neon-border {
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3), inset 0 0 10px rgba(0, 255, 136, 0.1);
+}
+
+.neon-border-primary {
+  border: 2px solid #ff006e;
+  box-shadow: 0 0 10px rgba(255, 0, 110, 0.3), inset 0 0 10px rgba(255, 0, 110, 0.1);
+}
+
+/* Glowing buttons */
+.btn-neon {
+  padding: 0.75rem 1.5rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  transition: all 300ms;
+  cursor: pointer;
+  background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+  color: #0a0e27;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  border: none;
+}
+
+.btn-neon:hover {
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+  transform: scale(1.05);
+}
+
+.btn-neon-primary {
+  background: linear-gradient(135deg, #ff006e 0%, #ff3366 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 300ms;
+}
+
+.btn-neon-primary:hover {
+  box-shadow: 0 0 40px rgba(255, 0, 110, 0.8);
+}
+
+/* Card styles */
+.card-cyberpunk {
+  background-color: #1a1f3a;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+@media (min-width: 768px) {
+  .card-cyberpunk {
+    padding: 1.5rem;
+  }
+}
+
+.card-cyberpunk:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+}
+
+/* Input styles */
+input,
+textarea,
+select {
+  background-color: #16213e;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: white;
+  transition: all;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0e27;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff88;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00cc66;
+}
