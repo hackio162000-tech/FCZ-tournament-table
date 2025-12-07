@@ -12,8 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   // REAL fixed credentials
-  const VALID_USERNAME = "Nithi";           // change if needed
-  const VALID_PASSWORD = "NewPassword123";   // put your real password
+  const VALID_USERNAME = "Nithi24";           // change if needed
+  const VALID_PASSWORD = "ChangePassword";   // put your real password
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
