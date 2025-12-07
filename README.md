@@ -2,6 +2,8 @@
 
 A modern web application for creating and managing tournament points tables with a stunning cyberpunk theme. Perfect for tournaments, competitions, and games!
 
+**Status:** ✅ Production Ready | Deployed on Vercel
+
 ## Features
 
 ✨ **Cyberpunk Theme** - Neon-glowing interface with futuristic design
