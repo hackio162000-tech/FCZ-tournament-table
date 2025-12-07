@@ -11,6 +11,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // REAL fixed credentials
+  const VALID_USERNAME = "Nithi";           // change if needed
+  const VALID_PASSWORD = "YourSecret123";   // put your real password
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -20,12 +24,15 @@ export default function LoginPage() {
       return;
     }
 
-    if (login(username, password)) {
+    // CHECK REAL USERNAME + PASSWORD
+    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+      login(username, password);
       setUsername("");
       setPassword("");
-    } else {
-      setError("Invalid credentials. Try 'Nithi' as username.");
+      return;
     }
+
+    setError("Invalid username or password");
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -52,9 +59,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isLoggedIn) {
-    return null;
-  }
+  if (isLoggedIn) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -70,9 +75,7 @@ export default function LoginPage() {
         >
           {/* Username */}
           <div>
-            <label className="block text-sm text-cyberpunk-accent mb-2">
-              Username
-            </label>
+            <label className="block text-sm text-cyberpunk-accent mb-2">Username</label>
             <input
               type="text"
               value={username}
@@ -80,19 +83,12 @@ export default function LoginPage() {
               placeholder="Enter username"
               className="w-full"
             />
-            {!isRegistering && (
-              <p className="text-xs text-cyberpunk-tertiary mt-1 opacity-75">
-                Demo: use &quot;Nithi&quot;
-              </p>
-            )}
           </div>
 
-          {/* Email - Only for Registration */}
+          {/* Email (Only when Registering) */}
           {isRegistering && (
             <div>
-              <label className="block text-sm text-cyberpunk-accent mb-2">
-                Email
-              </label>
+              <label className="block text-sm text-cyberpunk-accent mb-2">Email</label>
               <input
                 type="email"
                 value={email}
@@ -105,9 +101,7 @@ export default function LoginPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm text-cyberpunk-accent mb-2">
-              Password
-            </label>
+            <label className="block text-sm text-cyberpunk-accent mb-2">Password</label>
             <input
               type="password"
               value={password}
@@ -134,7 +128,7 @@ export default function LoginPage() {
             {isRegistering ? "Create Account" : "Login"}
           </button>
 
-          {/* Toggle Register/Login */}
+          {/* Toggle */}
           <button
             type="button"
             onClick={() => {
@@ -152,18 +146,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Info */}
-        <div className="mt-6 p-3 bg-cyberpunk-dark rounded-lg border border-cyberpunk-accent border-opacity-30">
-          <p className="text-xs text-cyberpunk-accent opacity-75 mb-2">
-            🎮 Demo Credentials:
-          </p>
-          <p className="text-sm font-mono text-cyberpunk-secondary">
-            Username: <span className="text-cyberpunk-accent">Nithi</span>
-          </p>
-          <p className="text-sm font-mono text-cyberpunk-secondary">
-            Password: <span className="text-cyberpunk-accent">any password</span>
-          </p>
-        </div>
+        {/* 🔥 Demo removed completely */}
       </div>
     </div>
   );
