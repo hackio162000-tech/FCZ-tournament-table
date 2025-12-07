@@ -6,17 +6,5 @@
   "outputDirectory": ".next",
   "env": {
     "NEXT_PUBLIC_APP_NAME": "SNG Tournament Maker"
-  },
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    }
-  ]
+  }
 }
