@@ -39,7 +39,7 @@ export default function Home() {
         setPageAccessGranted(!!hasAccess);
       }
     }
-  }, []);
+  }, [tournaments, loadTournament]);
 
   if (!mounted) return null;
 
@@ -97,10 +97,10 @@ export default function Home() {
         </div>
 
         {/* Main Content */}
-        <TournamentHeader isSharedView={!!shareCode} />
+        <TournamentHeader />
         {!shareCode && <AddTeamForm />}
         {!shareCode && <AuthKeysManager />}
-        <PointsTable isSharedView={!!shareCode} />
+        <PointsTable />
 
         {/* Share Modal - only show in full access */}
         {!shareCode && <ShareModal />}

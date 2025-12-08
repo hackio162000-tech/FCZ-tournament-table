@@ -3,7 +3,7 @@
 import { useTournamentStore } from "@/store/tournament";
 import TeamRow from "./TeamRow";
 
-export default function PointsTable({ isSharedView }: { isSharedView?: boolean }) {
+export default function PointsTable() {
   const { getSortedTeams } = useTournamentStore();
   const sortedTeams = getSortedTeams();
 

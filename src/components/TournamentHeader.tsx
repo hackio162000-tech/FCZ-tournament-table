@@ -3,7 +3,7 @@
 import { useTournamentStore } from "@/store/tournament";
 import { useState } from "react";
 
-export default function TournamentHeader({ isSharedView }: { isSharedView?: boolean }) {
+export default function TournamentHeader() {
   const { currentTournament, generateShareCode } = useTournamentStore();
   const [copied, setCopied] = useState(false);
 
