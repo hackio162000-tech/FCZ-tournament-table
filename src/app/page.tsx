@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "@/store/auth";
 import { useTournamentStore } from "@/store/tournament";
+import { realtimeSync } from "@/lib/realtimeSync";
 import Login from "@/components/Login";
 import PageAccess from "@/components/PageAccess";
 import Navbar from "@/components/Navbar";
@@ -19,7 +20,7 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const { isLoggedIn } = useAuthStore();
-  const { currentTournament, tournaments, loadTournament } =
+  const { currentTournament, tournaments, loadTournament, importData } =
     useTournamentStore();
   const [mounted, setMounted] = useState(false);
   const [shareCode, setShareCode] = useState<string | null>(null);
@@ -27,6 +28,22 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+
+    // Listen for real-time updates from other admin devices
+    const unsubscribe = realtimeSync.subscribe((syncData) => {
+      if (syncData.type === "tournament-update") {
+        // Reload tournaments from localStorage to get latest data
+        const stored = localStorage.getItem("tournaments");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            importData(JSON.stringify(parsed));
+          } catch (err) {
+            console.error("Failed to sync:", err);
+          }
+        }
+      }
+    });
 
     // Check for shared tournament in URL
     const params = new URLSearchParams(window.location.search);
@@ -42,7 +59,11 @@ export default function Home() {
         setPageAccessGranted(!!hasAccess);
       }
     }
-  }, [tournaments, loadTournament]);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [tournaments, loadTournament, importData]);
 
   if (!mounted) return null;
 

@@ -189,7 +189,7 @@ export default function Settings() {
       <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-green-500 border-opacity-30">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-cyberpunk-accent">
-            🔄 Auto Backup History ({backupRecords.length}/50)
+            🔄 Backup History (Unlimited)
           </h3>
           <button
             onClick={() => setShowAutoBackupHistory(!showAutoBackupHistory)}
@@ -232,7 +232,7 @@ export default function Settings() {
         )}
 
         <p className="text-xs text-gray-400 mt-2">
-          ✓ Automatic backups created on every score update, team add/remove, and tournament creation
+          ✓ Automatic backups created on every score update
         </p>
       </div>
 

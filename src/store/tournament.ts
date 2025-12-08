@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { useAuthStore } from "./auth";
+import { realtimeSync } from "@/lib/realtimeSync";
 
 export interface Team {
   id: string;
@@ -144,8 +145,25 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     };
 
     set((state) => {
-      const records = [backupData, ...state.backupRecords].slice(0, 50); // Keep last 50 backups
+      // Keep unlimited backups - only cleanup if storage is getting too large
+      const records = [backupData, ...state.backupRecords];
+      
+      // If more than 1000 backups and total size is large, keep only last 500
+      if (records.length > 1000) {
+        const oldRecords = records.slice(0, 500);
+        localStorage.setItem("backupRecords", JSON.stringify(oldRecords));
+        return { backupRecords: oldRecords };
+      }
+      
       localStorage.setItem("backupRecords", JSON.stringify(records));
+      
+      // Broadcast to other admin devices for live sync
+      realtimeSync.broadcast({
+        type: "backup-created",
+        backup: backupData,
+        timestamp: Date.now(),
+      });
+      
       return { backupRecords: records };
     });
   },
@@ -218,6 +236,15 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     });
     // Auto-save backup after creating tournament
     get().saveAutoBackup();
+    
+    // Broadcast to other admin devices for live sync
+    realtimeSync.broadcast({
+      type: "tournament-update",
+      action: "tournament-created",
+      adminName: user?.username,
+      tournament: newTournament,
+      timestamp: Date.now(),
+    });
   },
 
   loadTournament: (id: string) => {
