@@ -6,10 +6,6 @@ import { useState } from "react";
 export default function LoginPage() {
   const { login, isLoggedIn } = useAuthStore();
 
-  // 🔐 FIXED CREDENTIALS (Only Admin can log in)
-  const VALID_USERNAME = "Admin";
-  const VALID_PASSWORD = "241703";
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,9 +19,9 @@ export default function LoginPage() {
       return;
     }
 
-    // CHECK CORRECT USERNAME AND PASSWORD
-    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-      login(username, password);
+    // Try to login with the provided credentials
+    const success = login(username, password);
+    if (success) {
       setUsername("");
       setPassword("");
       return;

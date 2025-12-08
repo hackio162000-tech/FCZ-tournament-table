@@ -19,8 +19,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
   // MULTIPLE ADMINS HERE 🔥
   login: (username: string, password: string) => {
     const ADMINS = [
-      { username: "Admin", password: "241703" },
-      { username: "Nithi", password: "12321" }, // <--- your new admin login
+      { username: "Admin", password: "admin@123" },
+      { username: "Nithi", password: "nithi@123" },
+      { username: "SuperAdmin", password: "SuperAdmin@2025" },
     ];
 
     const match = ADMINS.find(
