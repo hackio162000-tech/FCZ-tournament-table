@@ -5,11 +5,13 @@ import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 
 export default function Settings() {
-  const { currentTournament, tournaments } = useTournamentStore();
+  const { currentTournament, tournaments, getBackupHistory, restoreFromBackup } = useTournamentStore();
   const { logout, user } = useAuthStore();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [showBackupConfirm, setShowBackupConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showAutoBackupHistory, setShowAutoBackupHistory] = useState(false);
+  const backupRecords = getBackupHistory();
 
   if (!currentTournament) return null;
 
@@ -181,6 +183,57 @@ export default function Settings() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Auto Backup History */}
+      <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-green-500 border-opacity-30">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-cyberpunk-accent">
+            🔄 Auto Backup History ({backupRecords.length}/50)
+          </h3>
+          <button
+            onClick={() => setShowAutoBackupHistory(!showAutoBackupHistory)}
+            className="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded"
+          >
+            {showAutoBackupHistory ? "▼ Hide" : "▶ Show"}
+          </button>
+        </div>
+
+        {showAutoBackupHistory && (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {backupRecords.length === 0 ? (
+              <p className="text-xs text-gray-400">No backups yet. They will be created automatically when you edit scores.</p>
+            ) : (
+              backupRecords.map((backup, index) => (
+                <div
+                  key={index}
+                  className="p-2 bg-gray-800 rounded border border-green-500 border-opacity-20 text-xs flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-green-400 font-bold">{backup.tournamentName}</p>
+                    <p className="text-gray-400">
+                      {new Date(backup.timestamp).toLocaleString()} · {backup.teamsCount} teams
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      restoreFromBackup(index);
+                      alert("Backup restored successfully!");
+                      setShowAutoBackupHistory(false);
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
+                  >
+                    ⟲ Restore
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        <p className="text-xs text-gray-400 mt-2">
+          ✓ Automatic backups created on every score update, team add/remove, and tournament creation
+        </p>
       </div>
 
       {/* Logout */}

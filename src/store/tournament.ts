@@ -10,6 +10,14 @@ export interface Team {
   points: number;
 }
 
+export interface BackupRecord {
+  timestamp: string;
+  tournamentId: string;
+  tournamentName: string;
+  teamsCount: number;
+  data: string;
+}
+
 export interface AuthKey {
   id: string;
   key: string;
@@ -31,6 +39,7 @@ interface TournamentStore {
   tournaments: Tournament[];
   currentTournament: Tournament | null;
   isViewerMode: boolean;
+  backupRecords: BackupRecord[];
 
   createTournament: (name: string) => void;
   loadTournament: (id: string) => void;
@@ -51,16 +60,71 @@ interface TournamentStore {
   exportData: () => string;
   importData: (data: string) => void;
   checkCanEdit: () => boolean;
+  saveAutoBackup: () => void;
+  getBackupHistory: () => BackupRecord[];
+  restoreFromBackup: (backupId: number) => void;
 }
 
 export const useTournamentStore = create<TournamentStore>((set, get) => ({
   tournaments: [],
   currentTournament: null,
   isViewerMode: false,
+  backupRecords: [],
 
   checkCanEdit: () => {
     const user = useAuthStore.getState().user;
     return user?.role === "admin";
+  },
+
+  saveAutoBackup: () => {
+    const state = get();
+    if (!state.currentTournament) return;
+
+    const backupData: BackupRecord = {
+      timestamp: new Date().toISOString(),
+      tournamentId: state.currentTournament.id,
+      tournamentName: state.currentTournament.name,
+      teamsCount: state.currentTournament.teams.length,
+      data: JSON.stringify(state.currentTournament),
+    };
+
+    set((state) => {
+      const records = [backupData, ...state.backupRecords].slice(0, 50); // Keep last 50 backups
+      localStorage.setItem("backupRecords", JSON.stringify(records));
+      return { backupRecords: records };
+    });
+  },
+
+  getBackupHistory: () => {
+    return get().backupRecords;
+  },
+
+  restoreFromBackup: (backupIndex: number) => {
+    const records = get().backupRecords;
+    if (backupIndex < 0 || backupIndex >= records.length) return;
+
+    try {
+      const backup = records[backupIndex];
+      const tournament = JSON.parse(backup.data);
+      
+      set((state) => {
+        const updatedTournaments = state.tournaments.map((t) =>
+          t.id === tournament.id ? tournament : t
+        );
+        return {
+          tournaments: updatedTournaments,
+          currentTournament: tournament,
+        };
+      });
+
+      const store = get();
+      localStorage.setItem(
+        "tournaments",
+        JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
+      );
+    } catch (error) {
+      console.error("Failed to restore backup:", error);
+    }
   },
 
   createTournament: (name: string) => {
@@ -87,6 +151,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Auto-save backup after creating tournament
+    get().saveAutoBackup();
   },
 
   loadTournament: (id: string) => {
@@ -148,6 +214,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Auto-save backup after adding team
+    get().saveAutoBackup();
   },
 
   removeTeam: (teamId: string) => {
@@ -175,6 +243,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Auto-save backup after removing team
+    get().saveAutoBackup();
   },
 
   updateTeamScore: (
@@ -223,6 +293,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Auto-save backup after score update
+    get().saveAutoBackup();
   },
 
   generateShareCode: () => {
@@ -357,6 +429,17 @@ if (typeof window !== "undefined") {
       useTournamentStore.setState({ tournaments });
     } catch (error) {
       console.error("Failed to load tournaments from localStorage:", error);
+    }
+  }
+
+  // Load backup records
+  const backupStored = localStorage.getItem("backupRecords");
+  if (backupStored) {
+    try {
+      const backupRecords = JSON.parse(backupStored);
+      useTournamentStore.setState({ backupRecords });
+    } catch (error) {
+      console.error("Failed to load backup records:", error);
     }
   }
 }
