@@ -13,6 +13,7 @@ import TournamentList from "@/components/TournamentList";
 import AuthKeysManager from "@/components/AuthKeysManager";
 import GroupCreation from "@/components/GroupCreation";
 import Settings from "@/components/Settings";
+import AuditLog from "@/components/AuditLog";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 
@@ -103,6 +104,9 @@ export default function Home() {
         {!shareCode && <AddTeamForm />}
         {!shareCode && <AuthKeysManager />}
         <PointsTable />
+
+        {/* Audit Log - shows all changes */}
+        {!shareCode && <AuditLog />}
 
         {/* Group Management */}
         {!shareCode && <GroupCreation />}

@@ -18,6 +18,20 @@ export interface BackupRecord {
   data: string;
 }
 
+export interface ChangeLog {
+  id: string;
+  timestamp: string;
+  adminName: string;
+  tournamentId: string;
+  tournamentName: string;
+  action: "score_update" | "team_added" | "team_removed" | "tournament_created" | "tournament_deleted";
+  teamName?: string;
+  fieldChanged?: string;
+  oldValue?: any;
+  newValue?: any;
+  description: string;
+}
+
 export interface AuthKey {
   id: string;
   key: string;
@@ -40,6 +54,7 @@ interface TournamentStore {
   currentTournament: Tournament | null;
   isViewerMode: boolean;
   backupRecords: BackupRecord[];
+  changeLog: ChangeLog[];
 
   createTournament: (name: string) => void;
   loadTournament: (id: string) => void;
@@ -63,6 +78,10 @@ interface TournamentStore {
   saveAutoBackup: () => void;
   getBackupHistory: () => BackupRecord[];
   restoreFromBackup: (backupId: number) => void;
+  addChangeLog: (log: Omit<ChangeLog, "id">) => void;
+  getChangeLog: () => ChangeLog[];
+  exportChangeLog: () => string;
+  clearChangeLog: () => void;
 }
 
 export const useTournamentStore = create<TournamentStore>((set, get) => ({
@@ -70,10 +89,46 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   currentTournament: null,
   isViewerMode: false,
   backupRecords: [],
+  changeLog: [],
 
   checkCanEdit: () => {
     const user = useAuthStore.getState().user;
     return user?.role === "admin";
+  },
+
+  addChangeLog: (log: Omit<ChangeLog, "id">) => {
+    const newLog: ChangeLog = {
+      ...log,
+      id: Date.now().toString(),
+    };
+    set((state) => {
+      const logs = [newLog, ...state.changeLog].slice(0, 500); // Keep last 500 changes
+      localStorage.setItem("changeLog", JSON.stringify(logs));
+      return { changeLog: logs };
+    });
+  },
+
+  getChangeLog: () => {
+    return get().changeLog;
+  },
+
+  exportChangeLog: () => {
+    const state = get();
+    return JSON.stringify(
+      {
+        exportDate: new Date().toISOString(),
+        tournamentName: state.currentTournament?.name || "All Tournaments",
+        totalChanges: state.changeLog.length,
+        changes: state.changeLog,
+      },
+      null,
+      2
+    );
+  },
+
+  clearChangeLog: () => {
+    set({ changeLog: [] });
+    localStorage.removeItem("changeLog");
   },
 
   saveAutoBackup: () => {
@@ -133,6 +188,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       return;
     }
 
+    const user = useAuthStore.getState().user;
     const newTournament: Tournament = {
       id: Date.now().toString(),
       name,
@@ -151,6 +207,15 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Log the change
+    get().addChangeLog({
+      timestamp: new Date().toISOString(),
+      adminName: user?.username || "Unknown",
+      tournamentId: newTournament.id,
+      tournamentName: name,
+      action: "tournament_created",
+      description: `Tournament "${name}" created by ${user?.username}`,
+    });
     // Auto-save backup after creating tournament
     get().saveAutoBackup();
   },
@@ -187,6 +252,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       return;
     }
 
+    const user = useAuthStore.getState().user;
     set((state) => {
       if (!state.currentTournament) return state;
       const newTeam: Team = {
@@ -214,6 +280,16 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Log the change
+    get().addChangeLog({
+      timestamp: new Date().toISOString(),
+      adminName: user?.username || "Unknown",
+      tournamentId: store.currentTournament?.id || "",
+      tournamentName: store.currentTournament?.name || "",
+      action: "team_added",
+      teamName: name,
+      description: `Team "${name}" added by ${user?.username}`,
+    });
     // Auto-save backup after adding team
     get().saveAutoBackup();
   },
@@ -224,8 +300,14 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       return;
     }
 
+    const user = useAuthStore.getState().user;
+    let teamName = "";
+
     set((state) => {
       if (!state.currentTournament) return state;
+      const team = state.currentTournament.teams.find((t) => t.id === teamId);
+      teamName = team?.name || "Unknown Team";
+      
       const updatedTournament = {
         ...state.currentTournament,
         teams: state.currentTournament.teams.filter((t) => t.id !== teamId),
@@ -243,6 +325,16 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       "tournaments",
       JSON.stringify(store.tournaments.map((t) => ({ ...t, createdAt: t.createdAt.toISOString(), authKeys: t.authKeys.map(k => ({ ...k, createdAt: k.createdAt.toISOString() })) })))
     );
+    // Log the change
+    get().addChangeLog({
+      timestamp: new Date().toISOString(),
+      adminName: user?.username || "Unknown",
+      tournamentId: store.currentTournament?.id || "",
+      tournamentName: store.currentTournament?.name || "",
+      action: "team_removed",
+      teamName: teamName,
+      description: `Team "${teamName}" removed by ${user?.username}`,
+    });
     // Auto-save backup after removing team
     get().saveAutoBackup();
   },
@@ -259,23 +351,32 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       return;
     }
 
+    const user = useAuthStore.getState().user;
+    let teamName = "";
+    let oldTeamData: Team | null = null;
+    let newTeamData: Team | null = null;
+
     set((state) => {
       if (!state.currentTournament) return state;
       const updatedTournament = {
         ...state.currentTournament,
-        teams: state.currentTournament.teams.map((t) => {
+        teams: state.currentTournament.teams.map((t: Team) => {
           if (t.id === teamId) {
+            oldTeamData = { ...t };
+            teamName = t.name;
             const r = rounds !== undefined ? rounds : t.rounds;
             const w = wins !== undefined ? wins : t.wins;
             const l = losses !== undefined ? losses : t.losses;
             const p = points !== undefined ? points : t.points;
-            return {
+            const updated: Team = {
               ...t,
               rounds: r,
               wins: w,
               losses: l,
               points: p,
             };
+            newTeamData = updated;
+            return updated;
           }
           return t;
         }),
@@ -288,6 +389,65 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         currentTournament: updatedTournament,
       };
     });
+
+    // Log each change that occurred
+    if (rounds !== undefined && oldTeamData && newTeamData && (oldTeamData as Team).rounds !== rounds) {
+      get().addChangeLog({
+        timestamp: new Date().toISOString(),
+        adminName: user?.username || "Unknown",
+        tournamentId: get().currentTournament?.id || "",
+        tournamentName: get().currentTournament?.name || "",
+        action: "score_update",
+        teamName: teamName,
+        fieldChanged: "Rounds",
+        oldValue: (oldTeamData as Team).rounds,
+        newValue: rounds,
+        description: `${teamName} Rounds updated: ${(oldTeamData as Team).rounds} → ${rounds} by ${user?.username}`,
+      });
+    }
+    if (wins !== undefined && oldTeamData && newTeamData && (oldTeamData as Team).wins !== wins) {
+      get().addChangeLog({
+        timestamp: new Date().toISOString(),
+        adminName: user?.username || "Unknown",
+        tournamentId: get().currentTournament?.id || "",
+        tournamentName: get().currentTournament?.name || "",
+        action: "score_update",
+        teamName: teamName,
+        fieldChanged: "Wins",
+        oldValue: (oldTeamData as Team).wins,
+        newValue: wins,
+        description: `${teamName} Wins updated: ${(oldTeamData as Team).wins} → ${wins} by ${user?.username}`,
+      });
+    }
+    if (losses !== undefined && oldTeamData && newTeamData && (oldTeamData as Team).losses !== losses) {
+      get().addChangeLog({
+        timestamp: new Date().toISOString(),
+        adminName: user?.username || "Unknown",
+        tournamentId: get().currentTournament?.id || "",
+        tournamentName: get().currentTournament?.name || "",
+        action: "score_update",
+        teamName: teamName,
+        fieldChanged: "Losses",
+        oldValue: (oldTeamData as Team).losses,
+        newValue: losses,
+        description: `${teamName} Losses updated: ${(oldTeamData as Team).losses} → ${losses} by ${user?.username}`,
+      });
+    }
+    if (points !== undefined && oldTeamData && newTeamData && (oldTeamData as Team).points !== points) {
+      get().addChangeLog({
+        timestamp: new Date().toISOString(),
+        adminName: user?.username || "Unknown",
+        tournamentId: get().currentTournament?.id || "",
+        tournamentName: get().currentTournament?.name || "",
+        action: "score_update",
+        teamName: teamName,
+        fieldChanged: "Points",
+        oldValue: (oldTeamData as Team).points,
+        newValue: points,
+        description: `${teamName} Points updated: ${(oldTeamData as Team).points} → ${points} by ${user?.username}`,
+      });
+    }
+
     const store = get();
     localStorage.setItem(
       "tournaments",
@@ -440,6 +600,17 @@ if (typeof window !== "undefined") {
       useTournamentStore.setState({ backupRecords });
     } catch (error) {
       console.error("Failed to load backup records:", error);
+    }
+  }
+
+  // Load change log
+  const changeLogStored = localStorage.getItem("changeLog");
+  if (changeLogStored) {
+    try {
+      const changeLog = JSON.parse(changeLogStored);
+      useTournamentStore.setState({ changeLog });
+    } catch (error) {
+      console.error("Failed to load change log:", error);
     }
   }
 }
