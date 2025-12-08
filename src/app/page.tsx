@@ -3,6 +3,7 @@
 import { useAuthStore } from "@/store/auth";
 import { useTournamentStore } from "@/store/tournament";
 import Login from "@/components/Login";
+import PageAccess from "@/components/PageAccess";
 import Navbar from "@/components/Navbar";
 import TournamentHeader from "@/components/TournamentHeader";
 import AddTeamForm from "@/components/AddTeamForm";
@@ -18,25 +19,41 @@ export default function Home() {
   const { currentTournament, tournaments, loadTournament } =
     useTournamentStore();
   const [mounted, setMounted] = useState(false);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [pageAccessGranted, setPageAccessGranted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
     // Check for shared tournament in URL
     const params = new URLSearchParams(window.location.search);
-    const shareCode = params.get("tournament");
+    const code = params.get("tournament");
 
-    if (shareCode) {
-      const tournament = tournaments.find((t) => t.shareCode === shareCode);
+    if (code) {
+      setShareCode(code);
+      const tournament = tournaments.find((t) => t.shareCode === code);
       if (tournament) {
         loadTournament(tournament.id);
+        // Check if access was already granted in this session
+        const hasAccess = sessionStorage.getItem(`access_${tournament.id}`);
+        setPageAccessGranted(!!hasAccess);
       }
     }
   }, []);
 
   if (!mounted) return null;
 
-  if (!isLoggedIn) {
+  // If shared link AND no page access yet, show page access screen
+  if (shareCode && !pageAccessGranted) {
+    return (
+      <PageAccess
+        tournamentId={currentTournament?.id || ""}
+        onGrantAccess={() => setPageAccessGranted(true)}
+      />
+    );
+  }
+
+  if (!isLoggedIn && !shareCode) {
     return <Login />;
   }
 
@@ -55,7 +72,7 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 md:p-8 max-w-6xl mx-auto flex flex-col">
       <div className="flex-1">
-        <Navbar />
+        {!shareCode && <Navbar />}
         {/* Header with Tournament Info */}
         <div className="mb-8">
           <h1 className="neon-text text-4xl md:text-5xl mb-4 flicker">
@@ -66,7 +83,13 @@ export default function Home() {
         {/* Navigation */}
         <div className="mb-6 flex gap-2 flex-wrap">
           <button
-            onClick={() => loadTournament("")}
+            onClick={() => {
+              if (shareCode) {
+                window.location.href = "/";
+              } else {
+                loadTournament("");
+              }
+            }}
             className="btn-neon text-sm"
           >
             ← Back to Tournaments
@@ -74,13 +97,13 @@ export default function Home() {
         </div>
 
         {/* Main Content */}
-        <TournamentHeader />
-        <AddTeamForm />
-        <AuthKeysManager />
-        <PointsTable />
+        <TournamentHeader isSharedView={!!shareCode} />
+        {!shareCode && <AddTeamForm />}
+        {!shareCode && <AuthKeysManager />}
+        <PointsTable isSharedView={!!shareCode} />
 
-        {/* Share Modal */}
-        <ShareModal />
+        {/* Share Modal - only show in full access */}
+        {!shareCode && <ShareModal />}
       </div>
 
       <Footer />
