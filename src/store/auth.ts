@@ -16,16 +16,23 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   isLoggedIn: false,
 
-  // 🔐 FIXED ADMIN LOGIN ONLY
+  // MULTIPLE ADMINS HERE 🔥
   login: (username: string, password: string) => {
-    const VALID_USERNAME = "Admin";
-    const VALID_PASSWORD = "241703";
+    const ADMINS = [
+      { username: "Admin", password: "241703" },
+      { username: "Nithi", password: "12321" }, // <--- your new admin login
+    ];
 
-    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+    const match = ADMINS.find(
+      (user) => user.username === username && user.password === password
+    );
+
+    if (match) {
       const user: User = {
-        id: "admin-001",
-        username: "Admin",
+        id: match.username.toLowerCase(),
+        username: match.username,
       };
+
       set({ user, isLoggedIn: true });
       localStorage.setItem("user", JSON.stringify(user));
       return true;
@@ -40,7 +47,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   }
 }));
 
-// Load from localStorage on startup
+// Load saved user on page refresh
 if (typeof window !== "undefined") {
   const stored = localStorage.getItem("user");
   if (stored) {
