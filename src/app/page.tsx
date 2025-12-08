@@ -11,6 +11,8 @@ import PointsTable from "@/components/PointsTable";
 import ShareModal from "@/components/ShareModal";
 import TournamentList from "@/components/TournamentList";
 import AuthKeysManager from "@/components/AuthKeysManager";
+import GroupCreation from "@/components/GroupCreation";
+import Settings from "@/components/Settings";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 
@@ -101,6 +103,12 @@ export default function Home() {
         {!shareCode && <AddTeamForm />}
         {!shareCode && <AuthKeysManager />}
         <PointsTable />
+
+        {/* Group Management */}
+        {!shareCode && <GroupCreation />}
+
+        {/* Settings */}
+        {!shareCode && <Settings />}
 
         {/* Share Modal - only show in full access */}
         {!shareCode && <ShareModal />}
