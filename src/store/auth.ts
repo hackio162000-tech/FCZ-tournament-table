@@ -3,6 +3,7 @@ import { create } from "zustand";
 interface User {
   id: string;
   username: string;
+  role: "admin" | "viewer";
 }
 
 interface AuthStore {
@@ -16,12 +17,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   isLoggedIn: false,
 
-  // MULTIPLE ADMINS HERE 🔥
   login: (username: string, password: string) => {
     const ADMINS = [
-      { username: "Admin", password: "admin@123" },
-      { username: "Nithi", password: "nithi@123" },
-      { username: "SuperAdmin", password: "SuperAdmin@2025" },
+      { username: "Admin", password: "admin@123", role: "admin" as const },
+      { username: "Nithi", password: "nithi@123", role: "admin" as const },
+      { username: "SuperAdmin", password: "SuperAdmin@2025", role: "admin" as const },
+      { username: "Role", password: "2323", role: "viewer" as const },
     ];
 
     const match = ADMINS.find(
@@ -32,6 +33,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const user: User = {
         id: match.username.toLowerCase(),
         username: match.username,
+        role: match.role,
       };
 
       set({ user, isLoggedIn: true });

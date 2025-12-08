@@ -1,14 +1,21 @@
 "use client";
 
 import { useTournamentStore } from "@/store/tournament";
+import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 
 export default function GroupCreation() {
   const { currentTournament, getSortedTeams } = useTournamentStore();
+  const { user } = useAuthStore();
   const [groupSize, setGroupSize] = useState(3);
   const [groups, setGroups] = useState<string[][]>([]);
 
   if (!currentTournament) return null;
+
+  // Only show for admins
+  if (user?.role !== "admin") {
+    return null;
+  }
 
   const teams = getSortedTeams();
   const totalTeams = teams.length;

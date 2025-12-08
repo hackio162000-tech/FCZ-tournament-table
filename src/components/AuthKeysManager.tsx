@@ -1,16 +1,23 @@
 "use client";
 
 import { useTournamentStore } from "@/store/tournament";
+import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 
 export default function AuthKeysManager() {
   const { currentTournament, generateAuthKey, removeAuthKey } =
     useTournamentStore();
+  const { user } = useAuthStore();
   const [username, setUsername] = useState("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   if (!currentTournament) return null;
+
+  // Only show for admins
+  if (user?.role !== "admin") {
+    return null;
+  }
 
   const handleGenerateKey = (e: React.FormEvent) => {
     e.preventDefault();

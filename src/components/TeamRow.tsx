@@ -1,6 +1,7 @@
 "use client";
 
 import { useTournamentStore, Team } from "@/store/tournament";
+import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 
 interface TeamRowProps {
@@ -10,6 +11,8 @@ interface TeamRowProps {
 
 export default function TeamRow({ team, rank }: TeamRowProps) {
   const { updateTeamScore, removeTeam } = useTournamentStore();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
   const [showEditRounds, setShowEditRounds] = useState(false);
   const [showEditWins, setShowEditWins] = useState(false);
   const [showEditLosses, setShowEditLosses] = useState(false);
@@ -55,9 +58,9 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
         {/* Rounds (RP) */}
         <div
           className="col-span-2 md:col-span-2 text-center"
-          onClick={() => setShowEditRounds(true)}
+          onClick={() => isAdmin && setShowEditRounds(true)}
         >
-          {showEditRounds ? (
+          {showEditRounds && isAdmin ? (
             <div className="flex gap-1">
               <input
                 type="number"
@@ -75,8 +78,8 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
               </button>
             </div>
           ) : (
-            <span className="cursor-pointer hover:text-cyberpunk-accent transition-colors">
-              <span className="font-bold text-cyberpunk-tertiary">{team.rounds}</span>
+            <span className={`font-bold text-cyberpunk-tertiary ${isAdmin ? "cursor-pointer hover:text-cyberpunk-accent transition-colors" : ""}`}>
+              {team.rounds}
             </span>
           )}
         </div>
@@ -84,9 +87,9 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
         {/* Wins */}
         <div
           className="col-span-2 md:col-span-2 text-center"
-          onClick={() => setShowEditWins(true)}
+          onClick={() => isAdmin && setShowEditWins(true)}
         >
-          {showEditWins ? (
+          {showEditWins && isAdmin ? (
             <div className="flex gap-1">
               <input
                 type="number"
@@ -104,8 +107,8 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
               </button>
             </div>
           ) : (
-            <span className="cursor-pointer hover:text-cyberpunk-accent transition-colors">
-              <span className="font-bold text-cyberpunk-tertiary">{team.wins}</span>
+            <span className={`font-bold text-cyberpunk-tertiary ${isAdmin ? "cursor-pointer hover:text-cyberpunk-accent transition-colors" : ""}`}>
+              {team.wins}
             </span>
           )}
         </div>
@@ -113,9 +116,9 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
         {/* Losses */}
         <div
           className="col-span-2 md:col-span-2 text-center"
-          onClick={() => setShowEditLosses(true)}
+          onClick={() => isAdmin && setShowEditLosses(true)}
         >
-          {showEditLosses ? (
+          {showEditLosses && isAdmin ? (
             <div className="flex gap-1">
               <input
                 type="number"
@@ -133,8 +136,8 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
               </button>
             </div>
           ) : (
-            <span className="cursor-pointer hover:text-cyberpunk-accent transition-colors">
-              <span className="font-bold text-cyberpunk-primary">{team.losses}</span>
+            <span className={`font-bold text-cyberpunk-primary ${isAdmin ? "cursor-pointer hover:text-cyberpunk-accent transition-colors" : ""}`}>
+              {team.losses}
             </span>
           )}
         </div>
@@ -142,9 +145,9 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
         {/* Total Points */}
         <div
           className="col-span-2 md:col-span-2 text-center"
-          onClick={() => setShowEditPoints(true)}
+          onClick={() => isAdmin && setShowEditPoints(true)}
         >
-          {showEditPoints ? (
+          {showEditPoints && isAdmin ? (
             <div className="flex gap-1">
               <input
                 type="number"
@@ -162,23 +165,25 @@ export default function TeamRow({ team, rank }: TeamRowProps) {
               </button>
             </div>
           ) : (
-            <span className="cursor-pointer hover:text-cyberpunk-accent transition-colors">
-              <span className="font-bold text-cyberpunk-accent text-sm md:text-lg">
-                {team.points}
-              </span>
+            <span className={`font-bold text-cyberpunk-accent text-sm md:text-lg ${isAdmin ? "cursor-pointer hover:text-cyberpunk-tertiary transition-colors" : ""}`}>
+              {team.points}
             </span>
           )}
         </div>
 
         {/* Delete Button */}
         <div className="col-span-1 md:col-span-1 text-center">
-          <button
-            onClick={() => removeTeam(team.id)}
-            className="text-cyberpunk-primary hover:text-red-400 transition-colors text-lg"
-            title="Remove team"
-          >
-            ✕
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={() => removeTeam(team.id)}
+              className="text-cyberpunk-primary hover:text-red-400 transition-colors text-lg"
+              title="Remove team"
+            >
+              ✕
+            </button>
+          ) : (
+            <span className="text-gray-600">—</span>
+          )}
         </div>
       </div>
     </div>

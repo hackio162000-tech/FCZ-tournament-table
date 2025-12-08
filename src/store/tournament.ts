@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useAuthStore } from "./auth";
 
 export interface Team {
   id: string;
@@ -29,6 +30,7 @@ export interface Tournament {
 interface TournamentStore {
   tournaments: Tournament[];
   currentTournament: Tournament | null;
+  isViewerMode: boolean;
 
   createTournament: (name: string) => void;
   loadTournament: (id: string) => void;
@@ -48,13 +50,25 @@ interface TournamentStore {
   getSortedTeams: () => Team[];
   exportData: () => string;
   importData: (data: string) => void;
+  checkCanEdit: () => boolean;
 }
 
 export const useTournamentStore = create<TournamentStore>((set, get) => ({
   tournaments: [],
   currentTournament: null,
+  isViewerMode: false,
+
+  checkCanEdit: () => {
+    const user = useAuthStore.getState().user;
+    return user?.role === "admin";
+  },
 
   createTournament: (name: string) => {
+    if (!get().checkCanEdit()) {
+      console.warn("Only admins can create tournaments");
+      return;
+    }
+
     const newTournament: Tournament = {
       id: Date.now().toString(),
       name,
@@ -84,6 +98,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   deleteTournament: (id: string) => {
+    if (!get().checkCanEdit()) {
+      console.warn("Only admins can delete tournaments");
+      return;
+    }
+
     set((state) => ({
       tournaments: state.tournaments.filter((t) => t.id !== id),
       currentTournament:
@@ -97,6 +116,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   addTeam: (name: string) => {
+    if (!get().checkCanEdit()) {
+      console.warn("Only admins can add teams");
+      return;
+    }
+
     set((state) => {
       if (!state.currentTournament) return state;
       const newTeam: Team = {
@@ -127,6 +151,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   removeTeam: (teamId: string) => {
+    if (!get().checkCanEdit()) {
+      console.warn("Only admins can remove teams");
+      return;
+    }
+
     set((state) => {
       if (!state.currentTournament) return state;
       const updatedTournament = {
@@ -155,6 +184,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     losses?: number,
     points?: number
   ) => {
+    if (!get().checkCanEdit()) {
+      console.warn("Only admins can update team scores");
+      return;
+    }
+
     set((state) => {
       if (!state.currentTournament) return state;
       const updatedTournament = {

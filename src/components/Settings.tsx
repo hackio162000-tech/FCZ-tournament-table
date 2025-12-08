@@ -6,12 +6,17 @@ import { useState } from "react";
 
 export default function Settings() {
   const { currentTournament, tournaments } = useTournamentStore();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [showBackupConfirm, setShowBackupConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   if (!currentTournament) return null;
+
+  // Only show for admins
+  if (user?.role !== "admin") {
+    return null;
+  }
 
   const handleBackup = () => {
     const backupData = {

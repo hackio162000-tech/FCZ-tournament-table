@@ -1,10 +1,12 @@
 "use client";
 
 import { useTournamentStore } from "@/store/tournament";
+import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 
 export default function TournamentHeader() {
   const { currentTournament, generateShareCode } = useTournamentStore();
+  const { user } = useAuthStore();
   const [copied, setCopied] = useState(false);
 
   const handleShare = () => {
@@ -17,6 +19,8 @@ export default function TournamentHeader() {
   };
 
   if (!currentTournament) return null;
+
+  const isAdmin = user?.role === "admin";
 
   return (
     <div className="card-cyberpunk mb-6">
@@ -31,22 +35,26 @@ export default function TournamentHeader() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={handleShare}
-            className="btn-neon text-sm md:text-base"
-          >
-            {copied ? "✓ Copied!" : "📤 Share"}
-          </button>
-          <button
-            onClick={() => generateShareCode()}
-            className="btn-neon-primary text-sm md:text-base"
-          >
-            🔄 New Share Code
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={handleShare}
+                className="btn-neon text-sm md:text-base"
+              >
+                {copied ? "✓ Copied!" : "📤 Share"}
+              </button>
+              <button
+                onClick={() => generateShareCode()}
+                className="btn-neon-primary text-sm md:text-base"
+              >
+                🔄 New Share Code
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {currentTournament.shareCode && (
+      {isAdmin && currentTournament.shareCode && (
         <div className="mt-4 pt-4 border-t border-cyberpunk-accent border-opacity-30">
           <p className="text-xs opacity-75 mb-2">Share Code:</p>
           <code className="bg-cyberpunk-dark px-3 py-2 rounded text-cyberpunk-accent font-mono text-sm">

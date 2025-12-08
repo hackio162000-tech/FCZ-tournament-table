@@ -1,11 +1,18 @@
 "use client";
 
 import { useTournamentStore } from "@/store/tournament";
+import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 
 export default function AddTeamForm() {
   const { addTeam } = useTournamentStore();
+  const { user } = useAuthStore();
   const [teamName, setTeamName] = useState("");
+
+  // Only show for admins
+  if (user?.role !== "admin") {
+    return null;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
