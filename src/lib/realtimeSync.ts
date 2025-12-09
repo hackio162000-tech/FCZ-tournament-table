@@ -32,11 +32,12 @@ export class RealtimeSync {
   }
 
   // Broadcast changes to all connected devices
-  broadcast(data: any) {
+  broadcast(data: any, type: string = "tournament-update", tournamentId?: string) {
     if (this.channel) {
       this.channel.postMessage({
-        type: "tournament-update",
+        type,
         data,
+        tournamentId,
         timestamp: Date.now(),
       });
     }
@@ -46,8 +47,9 @@ export class RealtimeSync {
       localStorage.setItem(
         "tournaments-sync-event",
         JSON.stringify({
-          type: "tournament-update",
+          type,
           data,
+          tournamentId,
           timestamp: Date.now(),
         })
       );

@@ -2,16 +2,37 @@
 
 import { useTournamentStore } from "@/store/tournament";
 import { useAuthStore } from "@/store/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Settings() {
   const { currentTournament, tournaments, getBackupHistory, restoreFromBackup } = useTournamentStore();
   const { logout, user } = useAuthStore();
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light" | "cyberpunk">("cyberpunk");
   const [showBackupConfirm, setShowBackupConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showAutoBackupHistory, setShowAutoBackupHistory] = useState(false);
   const backupRecords = getBackupHistory();
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | "cyberpunk" | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      applyTheme(savedTheme);
+    }
+  }, []);
+
+  // Apply theme to HTML element
+  const applyTheme = (themeName: "dark" | "light" | "cyberpunk") => {
+    const html = document.documentElement;
+    html.setAttribute("data-theme", themeName);
+    localStorage.setItem("theme", themeName);
+  };
+
+  const handleThemeChange = (newTheme: "dark" | "light" | "cyberpunk") => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   if (!currentTournament) return null;
 
@@ -82,9 +103,19 @@ export default function Settings() {
       {/* Theme */}
       <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-cyan-500 border-opacity-30">
         <h3 className="text-sm font-bold text-cyberpunk-tertiary mb-3">Theme</h3>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
-            onClick={() => setTheme("dark")}
+            onClick={() => handleThemeChange("cyberpunk")}
+            className={`px-4 py-2 rounded transition-all ${
+              theme === "cyberpunk"
+                ? "bg-cyan-500 text-black font-bold"
+                : "bg-gray-700 text-white"
+            }`}
+          >
+            🌌 Cyberpunk
+          </button>
+          <button
+            onClick={() => handleThemeChange("dark")}
             className={`px-4 py-2 rounded transition-all ${
               theme === "dark"
                 ? "bg-cyan-500 text-black font-bold"
@@ -94,7 +125,7 @@ export default function Settings() {
             🌙 Dark
           </button>
           <button
-            onClick={() => setTheme("light")}
+            onClick={() => handleThemeChange("light")}
             className={`px-4 py-2 rounded transition-all ${
               theme === "light"
                 ? "bg-cyan-500 text-black font-bold"
@@ -104,9 +135,6 @@ export default function Settings() {
             ☀️ Light
           </button>
         </div>
-        <p className="text-xs text-cyberpunk-tertiary opacity-50 mt-2">
-          Light theme coming soon
-        </p>
       </div>
 
       {/* Backup & Restore */}

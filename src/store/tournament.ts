@@ -252,6 +252,10 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     const tournament = state.tournaments.find((t) => t.id === id);
     if (tournament) {
       set({ currentTournament: tournament });
+      // Broadcast tournament load to other devices
+      if (id) {
+        realtimeSync.broadcast({ tournamentId: id }, "tournament-loaded", id);
+      }
     }
   },
 

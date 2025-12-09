@@ -13,6 +13,7 @@ import ShareModal from "@/components/ShareModal";
 import TournamentList from "@/components/TournamentList";
 import AuthKeysManager from "@/components/AuthKeysManager";
 import GroupCreation from "@/components/GroupCreation";
+import TeamSelector from "@/components/TeamSelector";
 import Settings from "@/components/Settings";
 import AuditLog from "@/components/AuditLog";
 import Footer from "@/components/Footer";
@@ -29,6 +30,22 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
 
+    // FIRST: Load tournaments from localStorage immediately
+    const stored = localStorage.getItem("tournaments");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        importData(JSON.stringify(parsed));
+        
+        // After loading, check if we should auto-load first tournament
+        if (isLoggedIn && !currentTournament && parsed.length > 0) {
+          loadTournament(parsed[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to load tournaments:", err);
+      }
+    }
+
     // Listen for real-time updates from other admin devices
     const unsubscribe = realtimeSync.subscribe((syncData) => {
       if (syncData.type === "tournament-update") {
@@ -38,12 +55,24 @@ export default function Home() {
           try {
             const parsed = JSON.parse(stored);
             importData(JSON.stringify(parsed));
+            
+            // If another admin loaded a tournament, auto-load it too
+            if (syncData.tournamentId) {
+              setTimeout(() => {
+                loadTournament(syncData.tournamentId);
+              }, 100);
+            }
           } catch (err) {
             console.error("Failed to sync:", err);
           }
         }
       }
     });
+
+    // Auto-load first tournament if logged in and no tournament selected
+    if (isLoggedIn && !currentTournament && tournaments.length > 0) {
+      loadTournament(tournaments[0].id);
+    }
 
     // Check for shared tournament in URL
     const params = new URLSearchParams(window.location.search);
@@ -63,7 +92,7 @@ export default function Home() {
     return () => {
       unsubscribe();
     };
-  }, [tournaments, loadTournament, importData]);
+  }, [tournaments, loadTournament, importData, isLoggedIn, currentTournament]);
 
   if (!mounted) return null;
 
@@ -122,6 +151,7 @@ export default function Home() {
 
         {/* Main Content */}
         <TournamentHeader />
+        {!shareCode && <TeamSelector />}
         {!shareCode && <AddTeamForm />}
         {!shareCode && <AuthKeysManager />}
         <PointsTable />
